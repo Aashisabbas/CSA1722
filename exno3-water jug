@@ -1,0 +1,35 @@
+from collections import deque
+def get_next_states(state, x, y):
+    next_states = set()
+    a, b = state
+    next_states.add((max(0, a - (y - b)), min(y, b + a)))
+    next_states.add((min(x, a + b), max(0, b - (x - a))))
+    next_states.add((0, b))
+    next_states.add((a, 0))
+    next_states.add((x, b))
+    next_states.add((a, y))
+    return next_states
+def water_jug_bfs(x, y, z):
+    start_state = (0, 0)
+    visited = set()
+    queue = deque([(start_state, [])])
+    while queue:
+        state, path = queue.popleft()
+        visited.add(state)
+        if z in state:
+            return path + [state]
+        for next_state in get_next_states(state, x, y):
+            if next_state not in visited:
+                queue.append((next_state, path + [state]))
+
+    return None
+x = 4
+y = 3
+z = 2
+solution = water_jug_bfs(x, y, z)
+if solution:
+    print("Steps to measure {} liters of water:".format(z))
+    for i, step in enumerate(solution):
+        print("Step {}: Jug X = {}, Jug Y = {}".format(i + 1, step[0], step[1]))
+else:
+    print("Target amount cannot be achieved.")
