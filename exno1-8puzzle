@@ -1,0 +1,76 @@
+import heapq
+
+class PuzzleNode:
+    def __init__(self, state, parent=None, move=None, depth=0, cost=0):
+        self.state = state
+        self.parent = parent
+        self.move = move
+        self.depth = depth
+        self.cost = cost
+    
+    def __lt__(self, other):
+        return (self.cost + self.depth) < (other.cost + other.depth)
+
+    def __eq__(self, other):
+        return self.state == other.state
+
+    def __hash__(self):
+        return hash(str(self.state))
+
+def move_blank(state, direction):
+    new_state = state[:]
+    blank_index = new_state.index(0)
+    if direction == 'up':
+        if blank_index not in [0, 1, 2]:
+            new_state[blank_index], new_state[blank_index - 3] = new_state[blank_index - 3], new_state[blank_index]
+            return new_state
+    elif direction == 'down':
+        if blank_index not in [6, 7, 8]:
+            new_state[blank_index], new_state[blank_index + 3] = new_state[blank_index + 3], new_state[blank_index]
+            return new_state
+    elif direction == 'left':
+        if blank_index not in [0, 3, 6]:
+            new_state[blank_index], new_state[blank_index - 1] = new_state[blank_index - 1], new_state[blank_index]
+            return new_state
+    elif direction == 'right':
+        if blank_index not in [2, 5, 8]:
+            new_state[blank_index], new_state[blank_index + 1] = new_state[blank_index + 1], new_state[blank_index]
+            return new_state
+    return None
+
+def heuristic(state, goal_state):
+    return sum([1 if state[i] != goal_state[i] else 0 for i in range(len(state))])
+
+def astar_search(start_state, goal_state):
+    start_node = PuzzleNode(start_state)
+    goal_node = PuzzleNode(goal_state)
+    frontier = []
+    heapq.heappush(frontier, start_node)
+    explored = set()
+    while frontier:
+        current_node = heapq.heappop(frontier)
+        explored.add(current_node)
+        if current_node.state == goal_node.state:
+            moves = []
+            while current_node.parent:
+                moves.append(current_node.move)
+                current_node = current_node.parent
+            return moves[::-1]
+        for direction in ['up', 'down', 'left', 'right']:
+            new_state = move_blank(current_node.state, direction)
+            if new_state:
+                child_node = PuzzleNode(new_state, parent=current_node, move=direction, depth=current_node.depth + 1,
+                                        cost=current_node.depth + 1 + heuristic(new_state, goal_state))
+                if child_node not in explored:
+                    heapq.heappush(frontier, child_node)
+    return None
+
+# Example usage
+start_state = [1, 2, 3, 4, 0, 5, 6, 7, 8]
+goal_state = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+
+solution = astar_search(start_state, goal_state)
+if solution:
+    print("Solution found in", len(solution), "moves:", solution)
+else:
+    print("No solution exists.")
